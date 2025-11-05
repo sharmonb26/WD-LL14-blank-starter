@@ -1,20 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>API Search</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <h1>API Search</h1>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Borderless Bites</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <section class="hero">
+      <h1 class="hero-title">Borderless Bites</h1>
+      <h3>Travel the World with Your Taste Buds!</h3>
+    </section>
+    <header class="header">
+      <nav class="navbar">
+        <ul>
+          <li><a href="#" class="active">HOME</a></li>
+          <li><a href="#" id="random-dish-btn">RANDOM DISH</a></li>
+          <li><a href="#">ABOUT US</a></li>
+          <li class="search-bar">
+            <input
+              type="text"
+              id="search-input"
+              placeholder="SEARCH RECIPE NAME..."
+            />
+            <button id="search-button">🔍</button>
+          </li>
+        </ul>
+      </nav>
+    </header>
 
-  <select name="area-select" id="area-select">
-    <option value="">Select Area</option>
-  </select>
+    <main class="main-content">
+      <aside class="sidebar">
+        <h3>EXPLORE BY CATEGORY</h3>
+        <select id="category-select">
+          <option value="">All Categories</option>
+        </select>
 
-  <div id="results"></div>
+        <h3>EXPLORE BY NATION</h3>
+        <ul id="area-list"></ul>
 
-  <script src="script.js"></script>
-</body>
+        <h3>EXPLORE BY HOLIDAY</h3>
+        <select id="holiday-select">
+          <option value="">All Holidays</option>
+        </select>
+
+        <h3>SAVED RECIPES ❤️</h3>
+        <ul id="saved-recipes-list">
+          <li><em style="color: #aaaaaa">No saved recipes yet</em></li>
+        </ul>
+      </aside>
+
+      <section class="content-area">
+        <div id="flag-spinner"></div>
+        <div
+          id="mystery-boxes"
+          style="
+            display: none;
+            position: relative;
+            width: 100%;
+            text-align: center;
+          "
+        ></div>
+        <button id="spin-wheel-btn">SPIN THE WHEEL</button>
+        <div id="recipe-detail-view" class="recipe-detail-view hidden">
+          <button id="back-to-grid-btn">← Back to Recipes</button>
+          <div id="detail-content"></div>
+        </div>
+
+        <div class="recipe-grid">
+          <p style="text-align: center; color: #e53935; padding: 50px">
+            Loading Recipes...
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <a
+      href="#"
+      id="go-back-link"
+      style="
+        display: block;
+        margin: 20px 0;
+        color: #e53935;
+        text-align: center;
+        font-size: 1.1em;
+      "
+      >← Go back</a
+    >
+
+    <footer class="footer">
+      <p>Data powered by TheMealDB | TERMS OF SERVICE | PRIVACY POLICY</p>
+      <div class="social-links"></div>
+    </footer>
+
+    <script type="text/javascript" src="./script.js"></script>
+  </body>
 </html>
