@@ -993,6 +993,9 @@ const flagAreas = [
   { flag: "🇨🇳", area: "Chinese" },
   { flag: "🇪🇸", area: "Spanish" },
   { flag: "🇬🇷", area: "Greek" },
+  { flag: "🇮🇳", area: "Indian" },
+  { flag: "🇹🇭", area: "Thai" },
+  { flag: "🇻🇳", area: "Vietnamese" },
 ];
 
 function getRandomArea() {
@@ -1047,25 +1050,195 @@ spinWheelBtn.addEventListener("click", async () => {
       });
     }
   }, 80);
+  // Function to fetch breakfast recipes (excluding desserts)
+  async function fetchBreakfastRecipe() {
+    try {
+      // Search terms for breakfast items
+      const breakfastTerms = [
+        "breakfast",
+        "eggs",
+        "omelette",
+        "pancake",
+        "french toast",
+        "croissant",
+        "pastry",
+      ];
+      let breakfastRecipes = [];
+
+      // Try each breakfast term
+      for (const term of breakfastTerms) {
+        const response = await fetch(SEARCH_URL + encodeURIComponent(term));
+        const data = await response.json();
+
+        if (data.meals) {
+          // Filter out desserts and keep only breakfast-appropriate items
+          const filteredMeals = data.meals.filter((meal) => {
+            const mealName = meal.strMeal.toLowerCase();
+            // Exclude dessert-like items
+            return (
+              !mealName.includes("cake") &&
+              !mealName.includes("cookie") &&
+              !mealName.includes("dessert") &&
+              !mealName.includes("pudding") &&
+              !mealName.includes("ice cream") &&
+              !mealName.includes("cheesecake") &&
+              !mealName.includes("brownie") &&
+              !mealName.includes("pie") &&
+              !mealName.includes("sweet") &&
+              !(
+                mealName.includes("chocolate") &&
+                !mealName.includes("chocolate milk")
+              )
+            );
+          });
+
+          // Add non-duplicate recipes
+          filteredMeals.forEach((meal) => {
+            if (
+              !breakfastRecipes.some(
+                (existing) => existing.idMeal === meal.idMeal
+              )
+            ) {
+              breakfastRecipes.push(meal);
+            }
+          });
+        }
+      }
+
+      // Also search for eggs
+      response = await fetch(SEARCH_URL + "eggs");
+      data = await response.json();
+
+      if (data.meals) {
+        // Add egg recipes that aren't already in the list
+        data.meals.forEach((recipe) => {
+          if (!breakfastRecipes.some((r) => r.idMeal === recipe.idMeal)) {
+            breakfastRecipes.push(recipe);
+          }
+        });
+      }
+
+      if (breakfastRecipes.length > 0) {
+        // Return a random breakfast recipe
+        return breakfastRecipes[
+          Math.floor(Math.random() * breakfastRecipes.length)
+        ];
+      }
+      return null;
+    } catch (error) {
+      console.error("Error fetching breakfast recipe:", error);
+      return null;
+    }
+  }
+
   // Show three mystery recipe cards (breakfast, lunch, dinner)
-  function showMysteryBoxes() {
+  async function showMysteryBoxes() {
     const mysteryBoxes = document.getElementById("mystery-boxes");
     mysteryBoxes.innerHTML = "";
     mysteryBoxes.style.display = "block";
-    // Pick three random recipes
-    let recipes = [];
-    if (currentRecipes.length >= 3) {
-      // Shuffle and pick three
-      recipes = currentRecipes
-        .slice()
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 3);
-    } else {
-      // If less than 3, repeat
-      for (let i = 0; i < 3; i++) {
-        recipes.push(currentRecipes[i % currentRecipes.length]);
+
+    // Keep track of used recipe IDs to prevent duplicates
+    const usedRecipeIds = new Set();
+
+    // Get a breakfast recipe first
+    const breakfastRecipe = await fetchBreakfastRecipe();
+    if (breakfastRecipe) {
+      usedRecipeIds.add(breakfastRecipe.idMeal);
+    }
+
+    // Get other recipes for lunch and dinner (savory meals only)
+    let otherRecipes = [];
+    // Filter out desserts, breakfast items, and already used recipes
+    const savoryRecipes = currentRecipes.filter((recipe) => {
+      // Skip if we've already used this recipe
+      if (usedRecipeIds.has(recipe.idMeal)) {
+        return false;
+      }
+
+      const name = recipe.strMeal.toLowerCase();
+      // Check for dessert-like items first
+      if (
+        name.includes("dessert") ||
+        name.includes("cake") ||
+        name.includes("cookie") ||
+        name.includes("pudding") ||
+        name.includes("pie") ||
+        name.includes("sweet") ||
+        name.includes("ice cream") ||
+        (name.includes("chocolate") && !name.includes("chocolate milk"))
+      ) {
+        return false;
+      }
+
+      // Check category if available
+      if (recipe.strCategory) {
+        return (
+          recipe.strCategory !== "Dessert" && recipe.strCategory !== "Breakfast"
+        );
+      }
+
+      return true;
+    });
+
+    if (savoryRecipes.length >= 2) {
+      // Shuffle the savory recipes
+      const shuffled = savoryRecipes.slice().sort(() => Math.random() - 0.5);
+      // Take first two that haven't been used
+      for (const recipe of shuffled) {
+        if (!usedRecipeIds.has(recipe.idMeal)) {
+          otherRecipes.push(recipe);
+          usedRecipeIds.add(recipe.idMeal);
+          if (otherRecipes.length >= 2) break;
+        }
       }
     }
+
+    // If we still need more recipes, fetch from different areas
+    if (otherRecipes.length < 2) {
+      const areas = ["Italian", "Mexican", "Indian", "Chinese", "French"];
+      for (const area of areas) {
+        if (otherRecipes.length >= 2) break;
+        try {
+          const areaResponse = await fetch(AREA_FILTER_BASE + area);
+          const areaData = await areaResponse.json();
+          if (areaData.meals) {
+            // Filter and shuffle area recipes
+            const areaRecipes = areaData.meals
+              .filter((recipe) => {
+                if (usedRecipeIds.has(recipe.idMeal)) return false;
+                const name = recipe.strMeal.toLowerCase();
+                return (
+                  !name.includes("dessert") &&
+                  !name.includes("cake") &&
+                  !name.includes("cookie") &&
+                  !name.includes("pudding") &&
+                  !name.includes("pie") &&
+                  !name.includes("sweet")
+                );
+              })
+              .sort(() => Math.random() - 0.5);
+
+            // Add unique recipes
+            for (const recipe of areaRecipes) {
+              if (!usedRecipeIds.has(recipe.idMeal)) {
+                otherRecipes.push(recipe);
+                usedRecipeIds.add(recipe.idMeal);
+                if (otherRecipes.length >= 2) break;
+              }
+            }
+          }
+        } catch (error) {
+          console.error(`Error fetching recipes from ${area}:`, error);
+          continue;
+        }
+      }
+    }
+
+    // Combine breakfast with other meals
+    const recipes = [
+      breakfastRecipe || otherRecipes[0], // Fallback if no breakfast recipe found
+      ...otherRecipes,
+    ];
     const meals = ["Breakfast", "Lunch", "Dinner"];
     recipes.forEach((recipe, idx) => {
       const box = document.createElement("div");
@@ -1094,8 +1267,69 @@ spinWheelBtn.addEventListener("click", async () => {
 });
 
 // Helper to show recipe details (image, recipe, steps)
-function showRecipeDetails(recipe) {
+async function showRecipeDetails(recipe) {
   if (!recipe) return;
+
+  // First fetch full recipe details to check category and ingredients
+  try {
+    const response = await fetch(DETAILS_LOOKUP_BASE + recipe.idMeal);
+    const data = await response.json();
+    const fullRecipe = data.meals?.[0];
+
+    if (fullRecipe) {
+      const mealName = fullRecipe.strMeal.toLowerCase();
+      const isDesert =
+        fullRecipe.strCategory === "Dessert" ||
+        mealName.includes("cake") ||
+        mealName.includes("cookie") ||
+        mealName.includes("dessert") ||
+        mealName.includes("pudding") ||
+        mealName.includes("ice cream") ||
+        mealName.includes("sweet") ||
+        mealName.includes("pie") ||
+        (mealName.includes("chocolate") &&
+          !mealName.includes("chocolate milk"));
+
+      // If it's a dessert, fetch a new savory recipe
+      if (isDesert) {
+        console.log("Found dessert, fetching new savory recipe...");
+        // Try to get a savory recipe from current cuisine
+        const areas = ["Italian", "Mexican", "Indian", "Chinese", "French"];
+        for (const area of areas) {
+          const areaResponse = await fetch(AREA_FILTER_BASE + area);
+          const areaData = await areaResponse.json();
+          if (areaData.meals) {
+            // Get full details of random recipe from this area
+            const randomRecipe =
+              areaData.meals[Math.floor(Math.random() * areaData.meals.length)];
+            const detailResponse = await fetch(
+              DETAILS_LOOKUP_BASE + randomRecipe.idMeal
+            );
+            const detailData = await detailResponse.json();
+            const newRecipe = detailData.meals?.[0];
+
+            if (
+              newRecipe &&
+              newRecipe.strCategory !== "Dessert" &&
+              !newRecipe.strMeal.toLowerCase().includes("dessert") &&
+              !newRecipe.strMeal.toLowerCase().includes("cake") &&
+              !newRecipe.strMeal.toLowerCase().includes("cookie") &&
+              !newRecipe.strMeal.toLowerCase().includes("pudding") &&
+              !newRecipe.strMeal.toLowerCase().includes("ice cream") &&
+              !newRecipe.strMeal.toLowerCase().includes("sweet") &&
+              !newRecipe.strMeal.toLowerCase().includes("pie")
+            ) {
+              recipe = newRecipe;
+              break;
+            }
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error checking recipe details:", error);
+  }
+
   recipeGrid.classList.add("hidden");
   fetchRecipeDetails(recipe.idMeal, true); // true = show Spin Again button
 }
