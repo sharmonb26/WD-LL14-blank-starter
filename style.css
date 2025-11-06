@@ -75,12 +75,13 @@ body {
 
 /* --- Main Site Container (Black Area) --- */
 .site-container {
-  width: 90%;
-  max-width: 1300px;
+  width: 95%;
+  max-width: 1200px;
   margin: 20px auto;
   background-color: #111111; /* Soft black main background */
   box-shadow: 0 0 25px rgba(0, 0, 0, 0.7);
   border-radius: 5px;
+  overflow-x: hidden;
 }
 
 /* --- Header & Navigation Bar --- */
@@ -278,7 +279,7 @@ body.wheel-spun .navbar a:hover {
 
 .content-area {
   flex-grow: 1;
-  padding: 20px 60px 20px 10px;
+  padding: 20px 60px 20px 80px;
   width: 100%;
   max-width: 1000px;
   margin: 0;
@@ -287,16 +288,17 @@ body.wheel-spun .navbar a:hover {
 /* --- Recipe Grid (List View) --- */
 .recipe-grid {
   display: grid;
-  grid-template-columns: repeat(3, 360px); /* Fixed width columns */
-  justify-content: start;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  justify-content: center;
   gap: 15px;
-  padding: 10px 10px 10px 5px;
+  padding: 10px;
   margin: 0;
   width: 100%;
 }
 
 .recipe-card {
-  width: 360px; /* Fixed width */
+  width: 100%;
+  max-width: 400px;
   background-color: #222222;
   border: 1px solid #333333;
   border-radius: 5px;
@@ -305,6 +307,7 @@ body.wheel-spun .navbar a:hover {
   cursor: pointer;
   transition: transform 0.2s;
   position: relative;
+  margin: 0 auto;
 }
 
 .recipe-card:hover {
@@ -312,8 +315,9 @@ body.wheel-spun .navbar a:hover {
 }
 
 .recipe-card img {
-  width: 360px;
-  height: 270px;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4/3;
   object-fit: cover;
   display: block;
 }
@@ -442,9 +446,9 @@ body.wheel-spun .navbar a:hover {
 .hero {
   width: 100%;
   background: linear-gradient(rgba(17, 17, 17, 0.85), rgba(17, 17, 17, 0.85)),
-    url("https://upload.wikimedia.org/wikipedia/commons/2/2c/Rotating_earth_%28large%29.gif");
-  background-size: cover;
-  background-position: center;
+    url("images/borderless bites background.png");
+  background-size: 50% auto;
+  background-position: center 60%;
   background-repeat: no-repeat;
   color: #fff;
   text-align: center;
